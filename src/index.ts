@@ -5,4 +5,4 @@ export type { ErrorBoundaryColors } from './ErrorBoundary';
 export { installGlobalHandler } from './globalHandler';
 export { friendlyMessage, isNetworkError, isPermissionError } from './messages';
 export { reportError, scrub, setReporter } from './report';
-export type { Reporter } from './report';
+export type { Reporter, ReporterOptions } from './report';

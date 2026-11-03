@@ -1,4 +1,4 @@
-import { reportError } from './report';
+import { capturesGlobalErrors, reportError } from './report';
 
 type Hermes = { enablePromiseRejectionTracker?: (options: { allRejections: boolean; onUnhandled: (id: number, error: unknown) => void }) => void };
 
@@ -14,14 +14,14 @@ export const installGlobalHandler = (): void => {
   if (typeof ErrorUtils !== 'undefined') {
     const previous = ErrorUtils.getGlobalHandler();
     ErrorUtils.setGlobalHandler((error, isFatal) => {
-      reportError(isFatal ? 'fatal' : 'uncaught', error);
+      if (!capturesGlobalErrors()) reportError(isFatal ? 'fatal' : 'uncaught', error);
       previous(error, isFatal);
     });
   }
   const hermes = (globalThis as { HermesInternal?: Hermes }).HermesInternal;
-  hermes?.enablePromiseRejectionTracker?.({ allRejections: true, onUnhandled: (_id, error) => reportError('unhandled-promise', error) });
+  hermes?.enablePromiseRejectionTracker?.({ allRejections: true, onUnhandled: (_id, error) => { if (!capturesGlobalErrors()) reportError('unhandled-promise', error); } });
   // On the web there is a browser event instead.
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    window.addEventListener('unhandledrejection', (event) => reportError('unhandled-promise', (event as PromiseRejectionEvent).reason));
+    window.addEventListener('unhandledrejection', (event) => { if (!capturesGlobalErrors()) reportError('unhandled-promise', (event as PromiseRejectionEvent).reason); });
   }
 };
