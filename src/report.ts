@@ -32,13 +32,17 @@ export const capturesGlobalErrors = (): boolean => reporterCapturesGlobal;
 const PATTERNS: [RegExp, string][] = [
   [/eyJ[\w-]+\.[\w-]+\.[\w-]*/g, '[token]'],
   [/\b(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{24,}\b/g, '[token]'],
-  [/[^\s@<>()]+@[^\s@<>()]+/gu, '[email]'],
+  [/[^\s@<>()]{1,64}@[^\s@<>()]{1,255}/gu, '[email]'],
   [/\(?\d{3}\)?[ .-]?\d{3}[ .-]?\d{4}/g, '[number]'],
   [/\d(?:[ -]?\d){5,}/g, '[number]'],
 ];
 
+// Reports are short. Cutting long text first keeps scrubbing fast even if an error carries a huge response body.
+const MAX_SCRUBBED = 4_000;
+
 /** Removes emails, phone and card-like numbers, long numbers and token-like strings, so reports never carry personal data. */
-export const scrub = (text: string): string => PATTERNS.reduce((out, [pattern, label]) => out.replace(pattern, label), text);
+export const scrub = (text: string): string =>
+  PATTERNS.reduce((out, [pattern, label]) => out.replace(pattern, label), text.length > MAX_SCRUBBED ? `${text.slice(0, MAX_SCRUBBED)}…` : text);
 
 const toError = (error: unknown): Error => {
   const source = error instanceof Error ? error : new Error(String(error));

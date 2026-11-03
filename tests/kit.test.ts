@@ -120,3 +120,15 @@ describe('capturesGlobalErrors', () => {
     expect(capturesGlobalErrors()).toBe(false);
   });
 });
+
+describe('long input', () => {
+  it('scrubs a 100,000-character message quickly', () => {
+    const start = Date.now();
+    scrub('a'.repeat(100_000));
+    scrub('-'.repeat(100_000));
+    expect(Date.now() - start).toBeLessThan(250);
+  });
+  it('still finds an email inside long text', () => {
+    expect(scrub(`${'x '.repeat(100)}me@example.com`)).toContain('[email]');
+  });
+});

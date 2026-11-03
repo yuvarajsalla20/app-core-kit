@@ -6,3 +6,5 @@ export { installGlobalHandler } from './globalHandler';
 export { friendlyMessage, isNetworkError, isPermissionError } from './messages';
 export { reportError, scrub, setReporter } from './report';
 export type { Reporter, ReporterOptions } from './report';
+export { scrubEvent, startMonitoring } from './monitoring';
+export type { MonitoringOptions } from './monitoring';
