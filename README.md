@@ -38,4 +38,6 @@ module.exports = monitoringMetroConfig(__dirname);
 
 Privacy: reports contain the scrubbed error text, the screen name, and what Sentry adds itself: device model, OS and app version, and the IP address (turn on "Prevent Storing of IP Addresses" in the Sentry project). Install both kits from a pinned tag or commit.
 
+Version: `import { KIT_VERSION } from 'app-core-kit'` gives the installed version (a test keeps it equal to package.json). Pass it, with the other kits' versions, to the account kit's `kitsLine` so the app can show and report every kit version in one line.
+
 Develop: `npm install`, `npm run typecheck`, `npm test`.

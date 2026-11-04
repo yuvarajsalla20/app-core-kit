@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { retry, withTimeout } from '../src/async';
+import { KIT_NAME, KIT_VERSION } from '../src/kit';
 import { friendlyMessage, isNetworkError, isPermissionError } from '../src/messages';
 import { capturesGlobalErrors, reportError, scrub, setReporter } from '../src/report';
 
@@ -130,5 +132,13 @@ describe('long input', () => {
   });
   it('still finds an email inside long text', () => {
     expect(scrub(`${'x '.repeat(100)}me@example.com`)).toContain('[email]');
+  });
+});
+
+describe('kit version', () => {
+  it('matches package.json, so it cannot drift', () => {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+    expect(KIT_VERSION).toBe(pkg.version);
+    expect(KIT_NAME).toBe(pkg.name);
   });
 });

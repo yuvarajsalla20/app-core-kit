@@ -1,3 +1,4 @@
+export { KIT_NAME, KIT_VERSION } from './kit';
 export { retry, sleep, withTimeout } from './async';
 export type { RetryOptions } from './async';
 export { ErrorBoundary } from './ErrorBoundary';
