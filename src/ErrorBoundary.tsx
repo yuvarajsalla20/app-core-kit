@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { friendlyMessage } from './messages';
-import { reportError } from './report';
+import { reportError, scrub } from './report';
 
 export interface ErrorBoundaryColors {
   bg: string;
@@ -36,11 +36,15 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: unknown, info: ErrorInfo) {
-    reportError(this.props.where, error, { componentStack: (info.componentStack ?? '').slice(0, 500) });
+    reportError(this.props.where, error, { componentStack: scrub(info.componentStack ?? '').slice(0, 500) });
   }
 
   reset = () => {
-    this.props.onReset?.();
+    try {
+      this.props.onReset?.();
+    } catch (e) {
+      reportError(this.props.where, e); // a broken onReset must not leave the person stuck on this screen
+    }
     this.setState({ error: null });
   };
 

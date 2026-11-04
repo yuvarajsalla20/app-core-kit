@@ -20,6 +20,6 @@ describe('scrubEvent', () => {
 
 describe('startMonitoring', () => {
   it('does nothing beyond catching errors when there is no address', async () => {
-    await expect(startMonitoring({})).resolves.toBeUndefined();
+    await expect(startMonitoring({})).resolves.toBe(false);
   });
 });

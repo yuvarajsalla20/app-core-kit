@@ -1,10 +1,10 @@
 export { KIT_NAME, KIT_VERSION } from './kit';
-export { retry, sleep, withTimeout } from './async';
+export { TimeoutError, isTimeoutError, retry, sleep, withTimeout } from './async';
 export type { RetryOptions } from './async';
 export { ErrorBoundary } from './ErrorBoundary';
 export type { ErrorBoundaryColors } from './ErrorBoundary';
 export { installGlobalHandler } from './globalHandler';
-export { FALLBACK_MESSAGE, NO_CONNECTION_MESSAGE, friendlyMessage, isNetworkError, isPermissionError } from './messages';
+export { FALLBACK_MESSAGE, NO_CONNECTION_MESSAGE, TIMEOUT_MESSAGE, friendlyMessage, isNetworkError, isPermissionError } from './messages';
 export { reportError, scrub, setReporter } from './report';
 export type { Reporter, ReporterOptions } from './report';
 export { scrubEvent, startMonitoring } from './monitoring';
