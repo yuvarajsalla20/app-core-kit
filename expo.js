@@ -4,7 +4,10 @@
  */
 const withMonitoring = (config) => {
   const { SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT } = process.env;
-  if (!SENTRY_AUTH_TOKEN || !SENTRY_ORG || !SENTRY_PROJECT) return config;
+  const missing = [['SENTRY_AUTH_TOKEN', SENTRY_AUTH_TOKEN], ['SENTRY_ORG', SENTRY_ORG], ['SENTRY_PROJECT', SENTRY_PROJECT]].filter(([, v]) => !v).map(([k]) => k);
+  // None set means "not using Sentry builds". Some set means a typo or a missing secret: say so, or the build ships unreadable crash stacks without a sign.
+  if (missing.length && missing.length < 3) console.warn(`[app-core-kit] withMonitoring: ${missing.join(', ')} not set, so crash stacks will not be readable. Set all three, or none.`);
+  if (missing.length) return config;
   return { ...config, plugins: [...(config.plugins ?? []), ['@sentry/react-native/expo', { organization: SENTRY_ORG, project: SENTRY_PROJECT }]] };
 };
 

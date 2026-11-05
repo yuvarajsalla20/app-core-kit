@@ -12,6 +12,7 @@ const MAX_WAITING = 20;
 const MAX_PER_MINUTE = 30;
 const MINUTE_MS = 60_000;
 const sentAt: number[] = [];
+let lastSeen = 0;
 let droppedEarly = 0;
 let heldBack = 0;
 
@@ -44,12 +45,18 @@ const PATTERNS: [RegExp, string][] = [
   [/eyJ[\w-]{6,}\.[\w-]{6,}/g, '[token]'], // a JWT cut short
   [/ExponentPushToken\[[^\]]*\]/g, '[token]'],
   [/\bBearer\s+\S+/gi, 'Bearer [token]'],
-  [/\b(token|access_token|refresh_token|api[_-]?key|key|secret|password|passwd|pwd|auth|sig|signature)=[^\s&"']+/gi, '$1=[secret]'],
+  // Header lines: everything after the colon, to the end of the line.
+  [/\b(proxy-authorization|authorization|set-cookie|cookie|x-api-key|x-auth-token)\s*:[^\r\n]+/gi, '$1: [secret]'],
+  // JSON: "password":"x", also with escaped quotes inside a JSON string and single quotes. The whole quoted value goes, spaces included.
+  [/(\\?["'])([\w-]*(?:token|secret|password|passwd|pwd|passcode|api[_-]?key|session[_-]?id|sessionid|cookie|otp|signature)|key|auth|authorization|sig|sid)\1(\s*:\s*)(?:\\"(?:[^"\\]|\\(?!"))*\\"|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s,}\]"'\\]+)/gi, '$1$2$1$3"[secret]"'],
+  // key=value, including client_secret=, session_id=, id_token= and similar.
+  [/\b([\w-]*(?:token|secret|password|passwd|pwd|passcode|api[_-]?key|session[_-]?id|sessionid|cookie|otp|signature)|key|auth|sig|sid)=[^\s&"']+/gi, '$1=[secret]'],
   [/\?[^\s"'#]+/g, '?[query]'], // everything after a ? in a link can carry a secret
   [/\b[0-9a-f]{32,}\b/gi, '[token]'],
   [/\b(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{24,}\b/g, '[token]'],
   // An address needs text before the @ and a dot after it, so a scoped package path like node_modules/@scope/pkg is left alone.
-  [/[^\s@<>()/]{1,64}@[^\s@<>()/]{1,255}\.[^\s@<>()/]{2,}/gu, '[email]'],
+  // Text like com.app@1.2.0+45 (an app release name) is a version after the @, not an address.
+  [/[^\s@<>()/]{1,64}@(?!\d+(?:\.\d+)+(?:[+-]\S*)?(?:\s|$))[^\s@<>()/]{1,255}\.[^\s@<>()/]{2,}/gu, '[email]'],
   [/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[ip]'],
   [/\b(?:[0-9a-f]{1,4}:){5,7}[0-9a-f]{1,4}\b/gi, '[ip]'],
   [/\b(?:[0-9a-f]{1,4}:){1,7}:[0-9a-f]{1,4}(?::[0-9a-f]{1,4}){0,6}\b/gi, '[ip]'],
@@ -100,6 +107,12 @@ export const reportError = (where: string, error: unknown, extra?: Record<string
     // Digits are blanked in the key, so "failed item 17" and "failed item 18" count as the same error.
     const key = `${place}|${clean.name}|${clean.message.replace(/\d+/g, '#')}`;
     const now = Date.now();
+    // The phone's clock was set back: old times would look like the future and block reports, so start the counts again.
+    if (now < lastSeen) {
+      sentAt.length = 0;
+      recent.clear();
+    }
+    lastSeen = now;
     const last = recent.get(key);
     if (last !== undefined && now - last < SAME_ERROR_GAP_MS) return;
     recent.delete(key);

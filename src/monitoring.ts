@@ -11,18 +11,20 @@ type Loose = Record<string, unknown>;
 const MAX_DEPTH = 8;
 
 /** Scrubs every text value and every key. Anything nested deeper than the limit is replaced, never passed through. */
-const scrubDeep = (value: unknown, depth = 0): unknown => {
-  if (typeof value === 'string') return scrub(value);
+const scrubDeep = (value: unknown, depth = 0, key = ''): unknown => {
+  if (typeof value === 'string') return GENERATED.has(key) ? value : scrub(value);
   if (value === null || typeof value !== 'object') return value;
   if (depth > MAX_DEPTH) return '[truncated]';
   if (Array.isArray(value)) return value.map((v) => scrubDeep(v, depth + 1));
-  return Object.fromEntries(Object.entries(value).map(([k, v]) => [scrub(k), scrubDeep(v, depth + 1)]));
+  return Object.fromEntries(Object.entries(value).map(([k, v]) => [scrub(k), scrubDeep(v, depth + 1, k)]));
 };
 
 // Removed outright: who the person is, what they sent, what they did, the computer's name.
 const REMOVED = ['user', 'request', 'breadcrumbs', 'server_name', 'spans'];
 // Left as they are because Sentry needs them to group, order and symbolicate (readable stack traces) the event.
-const KEPT = new Set(['event_id', 'timestamp', 'platform', 'level', 'type', 'sdk', 'debug_meta', 'modules']);
+const KEPT = new Set(['event_id', 'timestamp', 'platform', 'level', 'type', 'sdk', 'debug_meta', 'modules', 'release', 'dist', 'environment']);
+// Ids and times the SDK makes up itself: no personal data, and scrubbing them breaks trace links and times.
+const GENERATED = new Set(['trace_id', 'span_id', 'parent_span_id', 'boot_time', 'app_start_time', 'start_timestamp']);
 
 /**
  * Cleans a crash-service event before it is sent: user, request, breadcrumbs, server name and spans are removed, the
