@@ -38,6 +38,8 @@ module.exports = monitoringMetroConfig(__dirname);
 
 What the scrubbing cannot do: it works on patterns, so names, street addresses, ZIP codes, coordinates and plain words used as secrets are not recognised; letter-only tokens are told apart from long function names only when they contain a digit or are 32+ hex characters. Crashes inside native iPhone/Android code are reported by the Sentry SDK itself and do not pass through this scrubbing (unverified on a device). Do not put personal data in error text.
 
+Upgrading to 1.6.1: nothing breaks. In development an unhandled promise rejection shows React Native's yellow warning again (the kit's tracker had replaced it); release builds behave as before.
+
 Upgrading from 1.5: nothing breaks. New `strings` and `resetKeys` on `ErrorBoundary`; more secret shapes are hidden; a release such as `com.app@1.2.0+45` is no longer mistaken for an email address; the reporter keeps working if the phone's clock is set back; `sideEffects: false`. Dates in messages are still hidden (they may be a birth date).
 
 Upgrading from 1.4: `startMonitoring` now resolves a boolean instead of nothing. A timeout now says `TIMEOUT_MESSAGE` ("That took too long") instead of "No connection", and `isNetworkError` no longer matches the bare words "network" or "offline". New: `TimeoutError`, `isTimeoutError`, `TIMEOUT_MESSAGE`.
@@ -49,4 +51,4 @@ Version: `import { KIT_VERSION } from 'app-core-kit'` gives the installed versio
 Develop: `npm install`, `npm run typecheck`, `npm test`.
 
 ---
-Version 1.6.0 - 2026-11-04 8:35 PM CT
+Version 1.6.1 - 2026-11-14
