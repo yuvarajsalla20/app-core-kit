@@ -1,19 +1,46 @@
 # app-core-kit
 
-Reusable non-functional basics for React Native / Expo apps (iOS, Android, web). No native dependencies, nothing specific to any one app.
-Companion to [app-auth-kit](https://github.com/yuvarajsalla20/app-auth-kit).
+The non-functional basics every React Native and Expo app needs (iOS, Android and web): an error boundary, a global error handler, privacy-safe crash reporting with Sentry, timeouts and retries, and friendly error text. No native dependencies of its own and nothing specific to any one app.
 
-| Piece | What it does |
+**Current version: 1.6.1** (tag `v1.6.1`)
+
+Part of the shared kits:
+**app-core-kit** ·
+[app-auth-kit](https://github.com/yuvarajsalla20/app-auth-kit) ·
+[app-account-kit](https://github.com/yuvarajsalla20/app-account-kit) ·
+[app-settings-kit](https://github.com/yuvarajsalla20/app-settings-kit) ·
+[app-subscriptions-kit](https://github.com/yuvarajsalla20/app-subscriptions-kit) ·
+[app-payments-kit](https://github.com/yuvarajsalla20/app-payments-kit) ·
+[app-export-kit](https://github.com/yuvarajsalla20/app-export-kit)
+
+The other kits use it for `reportError`, so install it in every app.
+
+## Install
+
+```jsonc
+// package.json
+"dependencies": {
+  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.6.1>"
+},
+"kitVersions": {
+  "app-core-kit": "v1.6.1"
+}
+```
+
+Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.6.1`.
+
+**Peer dependencies:** `react` ≥ 18, `react-native` ≥ 0.74, and optionally `@sentry/react-native` ≥ 8 (only for crash reports; it loads only when a DSN is set).
+
+## Entry points
+
+| Import | What it holds |
 |---|---|
-| `<ErrorBoundary where="home">` | A screen that crashes shows a calm "Try again" screen instead of killing the app, and the crash is reported. `strings` replaces the English words (title, retry, message); `resetKeys={[route]}` clears the screen when a key changes |
-| `installGlobalHandler()` | Reports uncaught errors and unhandled promise rejections, then lets the app's normal behavior continue |
-| `reportError(where, error)` | The one place handled failures are recorded. Scrubs emails, phone and card-like numbers, IP addresses, home-folder paths, tokens, Bearer and `password=`/`client_secret=`/`session_id=`/`id_token=` style secrets, quoted JSON values (also escaped), `Authorization:` and `Cookie:` header lines and everything after a `?` in a link; never throws; drops repeats within 5 s (numbers in the text are ignored when comparing) and sends at most 30 a minute; keeps the error `code` and a scrubbed `cause`; holds up to 20 reports made before the crash service is connected and tells the service if more were dropped |
-| `setReporter(fn, { capturesGlobalErrors })` | Connects a crash service (Sentry, Crashlytics...). The kit itself has no dependency on any. Pass `capturesGlobalErrors: true` when the service already catches uncaught errors (Sentry does) so they are not sent twice |
-| `startMonitoring({ dsn })` | One call at launch (a second call does nothing): installs the global handler and, if `dsn` is set, starts Sentry with privacy-safe settings (no screenshots, breadcrumbs, user details, session replay or feedback form; every text field and key scrubbed). Resolves `true` when Sentry is running and `false` when it is not (no address, or it could not start: a warning is printed). Needs `@sentry/react-native` installed in the app; it loads only when `dsn` is set |
-| `scrubEvent(event)` | The scrubbing `startMonitoring` applies to every Sentry event (user, request, breadcrumbs, server name and the phone's name removed; everything else scrubbed, deep or not; `release`, `dist`, `environment` and the SDK's own trace ids and start times are kept so Sentry can group and link); reuse it for another crash service |
-| `app-core-kit/expo`, `app-core-kit/metro` | Build helpers: `withMonitoring(config)` for `app.config.js` and `monitoringMetroConfig(__dirname)` for `metro.config.js`. They add Sentry's readable-stack-trace support only when `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are set (EAS secrets); if only some are set a warning names the missing ones |
-| `withTimeout`, `TimeoutError`, `isTimeoutError`, `retry`, `sleep` | Time limits (a `TimeoutError` with `code: 'timeout'`; a bad `ms` is refused) and retries with growing, capped, jittered waits (`shouldRetry` skips errors that can never succeed; `attempts` must be finite) |
-| `friendlyMessage`, `isNetworkError`, `isPermissionError` | Plain-language text for common failures. Only whole phrases such as "Network request failed" count as a lost connection; a timeout says `TIMEOUT_MESSAGE` |
+| `app-core-kit` | Everything below that runs in the app |
+| `app-core-kit/expo` | `withMonitoring(config)` for `app.config.js` (plain Node) |
+| `app-core-kit/metro` | `monitoringMetroConfig(__dirname)` for `metro.config.js` (plain Node) |
+| `app-core-kit/package.json` | The kit's `version`, for an About > Kits list |
+
+## Quick start
 
 ```ts
 // index.ts (app start)
@@ -33,22 +60,61 @@ module.exports = monitoringMetroConfig(__dirname);
 ```
 
 ```tsx
-<ErrorBoundary where="home" colors={{ bg: '#0B0B0C', accent: '#5CFFB1' }}><HomeScreen /></ErrorBoundary>
+// Around each screen
+import { ErrorBoundary, reportError, withTimeout } from 'app-core-kit';
+
+<ErrorBoundary where="home" resetKeys={[route]} colors={{ bg: '#0B0B0C', accent: '#5CFFB1' }}>
+  <HomeScreen />
+</ErrorBoundary>
+
+// A handled failure
+try {
+  await withTimeout(save(), 15_000);
+} catch (e) {
+  reportError('save', e);
+}
 ```
 
-What the scrubbing cannot do: it works on patterns, so names, street addresses, ZIP codes, coordinates and plain words used as secrets are not recognised; letter-only tokens are told apart from long function names only when they contain a digit or are 32+ hex characters. Crashes inside native iPhone/Android code are reported by the Sentry SDK itself and do not pass through this scrubbing (unverified on a device). Do not put personal data in error text.
+For readable crash stacks, set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` as EAS environment variables, and `EXPO_PUBLIC_SENTRY_DSN` for the app. With none set, the build is unchanged; with only some set, a warning names the missing ones.
 
-Upgrading to 1.6.1: nothing breaks. In development an unhandled promise rejection shows React Native's yellow warning again (the kit's tracker had replaced it); release builds behave as before.
+## What you get
 
-Upgrading from 1.5: nothing breaks. New `strings` and `resetKeys` on `ErrorBoundary`; more secret shapes are hidden; a release such as `com.app@1.2.0+45` is no longer mistaken for an email address; the reporter keeps working if the phone's clock is set back; `sideEffects: false`. Dates in messages are still hidden (they may be a birth date).
+| Piece | What it does |
+|---|---|
+| `<ErrorBoundary where colors? strings? resetKeys?>` | A screen that crashes shows a calm "Try again" screen instead of closing the app, and the crash is reported. `strings` replaces the words (title, retry, message); `resetKeys` clears the screen when a key changes |
+| `startMonitoring({ dsn })` | One call at launch (a second call does nothing): installs the global handler and, if `dsn` is set, starts Sentry with privacy-safe settings (no screenshots, breadcrumbs, user details, session replay or feedback form; every text field and key scrubbed). Resolves `true` when Sentry is running |
+| `installGlobalHandler()` | Reports uncaught errors and unhandled promise rejections, then lets the app's normal behavior continue. `startMonitoring` calls it for you |
+| `reportError(where, error)` | The one place handled failures are recorded. Scrubs personal data and secrets (see below), never throws, drops repeats within 5 s, sends at most 30 a minute, keeps the error `code` and a scrubbed `cause`, and holds up to 20 reports made before the crash service is connected |
+| `setReporter(fn, { capturesGlobalErrors })` | Connects another crash service (Crashlytics). Pass `capturesGlobalErrors: true` when the service already catches uncaught errors, so they are not sent twice |
+| `scrub(text)`, `scrubEvent(event)` | The scrubbing, for your own use or another crash service |
+| `withTimeout(promise, ms)`, `TimeoutError`, `isTimeoutError` | Time limits. A `TimeoutError` has `code: 'timeout'` |
+| `retry(fn, options)`, `sleep(ms)` | Retries with growing, capped, jittered waits. `shouldRetry` skips errors that can never succeed |
+| `friendlyMessage(error)`, `isNetworkError`, `isPermissionError` | Plain words for common failures. Only whole phrases such as "Network request failed" count as a lost connection |
+| `FALLBACK_MESSAGE`, `NO_CONNECTION_MESSAGE`, `TIMEOUT_MESSAGE` | The default texts |
+| `KIT_NAME`, `KIT_VERSION` | The kit's name and version (a test keeps it equal to package.json) |
 
-Upgrading from 1.4: `startMonitoring` now resolves a boolean instead of nothing. A timeout now says `TIMEOUT_MESSAGE` ("That took too long") instead of "No connection", and `isNetworkError` no longer matches the bare words "network" or "offline". New: `TimeoutError`, `isTimeoutError`, `TIMEOUT_MESSAGE`.
+## Privacy
 
-Privacy: reports contain the scrubbed error text, the screen name, and what Sentry adds itself: device model, OS and app version, and the IP address (turn on "Prevent Storing of IP Addresses" in the Sentry project). Install both kits from a pinned tag or commit.
+**What is scrubbed:** emails, phone and card-like numbers, IP addresses, home-folder paths, tokens, Bearer and `password=` / `client_secret=` / `session_id=` / `id_token=` style secrets, quoted JSON values (also escaped), `Authorization:` and `Cookie:` header lines, everything after a `?` in a link, and dates (they may be a birth date). Sentry events also lose the user, request, breadcrumbs, server name and the phone's name. `release`, `dist`, `environment` and Sentry's own trace ids are kept so Sentry can group and link.
 
-Version: `import { KIT_VERSION } from 'app-core-kit'` gives the installed version (a test keeps it equal to package.json). Pass it, with the other kits' versions, to the account kit's `kitsLine` so the app can show and report every kit version in one line.
+**What it cannot do:** it works on patterns, so names, street addresses, ZIP codes, coordinates and plain words used as secrets are not recognised. Crashes inside native iPhone or Android code are reported by the Sentry SDK itself and do not pass through this scrubbing. Do not put personal data in error text.
 
-Develop: `npm install`, `npm run typecheck`, `npm test`.
+**What a report contains:** the scrubbed error text, the screen name, and what Sentry adds itself: device model, OS, app version, and the IP address. Turn on "Prevent Storing of IP Addresses" in the Sentry project, and declare "Diagnostics" in the App Store privacy answers.
 
----
-Version 1.6.1 - 2026-11-14
+## Development
+
+```bash
+npm install
+npm run typecheck
+npm test
+```
+
+To release: bump `version` in `package.json` and `KIT_VERSION` in `src/kit.ts`, add a note to [CHANGELOG.md](CHANGELOG.md), merge, then tag the merged commit.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+MIT
