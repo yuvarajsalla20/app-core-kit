@@ -19,7 +19,15 @@ export const installGlobalHandler = (): void => {
     });
   }
   const hermes = (globalThis as { HermesInternal?: Hermes }).HermesInternal;
-  hermes?.enablePromiseRejectionTracker?.({ allRejections: true, onUnhandled: (_id, error) => { if (!capturesGlobalErrors()) reportError('unhandled-promise', error); } });
+  // This replaces React Native's own tracker, which in development shows the yellow "Possible unhandled promise rejection"
+  // box. Say the same in development, so nothing is hidden while building the app.
+  hermes?.enablePromiseRejectionTracker?.({
+    allRejections: true,
+    onUnhandled: (id, error) => {
+      if (typeof __DEV__ !== 'undefined' && __DEV__) console.warn(`Possible unhandled promise rejection (id: ${id}):`, error);
+      if (!capturesGlobalErrors()) reportError('unhandled-promise', error);
+    },
+  });
   // On the web there is a browser event instead.
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('unhandledrejection', (event) => { if (!capturesGlobalErrors()) reportError('unhandled-promise', (event as PromiseRejectionEvent).reason); });
