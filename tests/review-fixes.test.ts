@@ -39,8 +39,8 @@ describe('scrub: more kinds of personal data', () => {
     ['apikey=abc12345', 'apikey=[secret]'],
     ['from 192.168.1.20 failed', 'from [ip] failed'],
     ['peer fe80::1ff:fe23:4567:890a', 'peer [ip]'],
-    ['file /Users/yuvaraj/app/index.js', 'file [home]/app/index.js'],
-    ['C:\\Users\\yuva\\app.js', '[home]\\app.js'],
+    ['file /Users/dev/app/index.js', 'file [home]/app/index.js'],
+    ['C:\\Users\\dev\\app.js', '[home]\\app.js'],
     ['card 4111.1111.1111.1111', 'card [number]'],
     ['card 4111/1111/1111/1111', 'card [number]'],
     ['card 4111\u00a01111\u00a01111\u00a01111', 'card [number]'],
@@ -74,15 +74,15 @@ describe('scrubEvent', () => {
   it('scrubs the fields it did not list before, and keys, and removes the machine and phone names', () => {
     const out = scrubEvent({
       transaction: '/profile/bob@x.com',
-      server_name: 'Yuvarajs-MacBook',
+      server_name: 'Dev-MacBook',
       release: 'app@1.0.0',
       extra: { 'bob@x.com': 'v' },
-      contexts: { device: { name: "Yuvaraj's iPhone", model: 'iPhone15' } },
+      contexts: { device: { name: "Dev's iPhone", model: 'iPhone15' } },
       event_id: 'abc',
       debug_meta: { images: [{ debug_id: 'x' }] },
     }) as Record<string, unknown>;
     const text = JSON.stringify(out);
-    expect(text).not.toMatch(/bob@x\.com|MacBook|Yuvaraj/);
+    expect(text).not.toMatch(/bob@x\.com|MacBook|Dev's/);
     expect(out.server_name).toBeUndefined();
     expect(out.event_id).toBe('abc');
     expect(out.debug_meta).toEqual({ images: [{ debug_id: 'x' }] });

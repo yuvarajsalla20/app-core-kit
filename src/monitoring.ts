@@ -35,7 +35,7 @@ export const scrubEvent = <E extends object>(event: E): E => {
   for (const key of REMOVED) delete copy[key];
   for (const key of Object.keys(copy)) if (!KEPT.has(key)) copy[key] = scrubDeep(copy[key]);
   const contexts = copy.contexts as Record<string, Loose> | undefined;
-  if (contexts?.device && typeof contexts.device === 'object') delete contexts.device.name; // "Yuvaraj's iPhone"
+  if (contexts?.device && typeof contexts.device === 'object') delete contexts.device.name; // "Dev's iPhone"
   return copy as E;
 };
 
