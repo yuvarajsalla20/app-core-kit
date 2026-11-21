@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain Node script, no types
-import { checkKits, commitOfTag, isKit, main, parsePin, standardPin } from '../checkKitPins.mjs';
+import { checkKits, commitOfTag, isKit, isTag, main, parsePin, standardPin } from '../checkKitPins.mjs';
 
 const SHA = 'a'.repeat(40);
 const OTHER = 'b'.repeat(40);
@@ -26,6 +26,25 @@ describe('kit pin check', () => {
     expect(parsePin('git+https://github.com/yuvarajsalla20/app-core-kit.git#abc1234')).toBeNull();
     expect(parsePin('^1.0.0')).toBeNull();
     expect(standardPin('o/app-x-kit', SHA)).toBe(pin('app-x-kit').replace('yuvarajsalla20', 'o'));
+  });
+
+  it('never lets a repo or tag that could be a git option reach git', () => {
+    expect(parsePin(`git+https://github.com/--upload-pack=x/app-x-kit.git#${SHA}`)).toBeNull();
+    expect(parsePin(`git+https://github.com/o/app x-kit.git#${SHA}`)).toBeNull();
+    expect(isTag('v1.2.0')).toBe(true);
+    expect(isTag('1.2.0-beta.1')).toBe(true);
+    expect(isTag('--upload-pack=touch x')).toBe(false);
+    expect(isTag('v1.2.0 x')).toBe(false);
+    let called = false;
+    const r = checkKits(
+      { dependencies: { 'app-core-kit': pin('app-core-kit') }, kitVersions: { 'app-core-kit': '--upload-pack=touch /tmp/x' } },
+      () => {
+        called = true;
+        return '';
+      },
+    );
+    expect(called).toBe(false);
+    expect(r.problems[0]).toContain('is not a release tag');
   });
 
   it('takes the commit of an annotated tag from its ^{} line', () => {

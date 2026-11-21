@@ -19,7 +19,9 @@ import { pathToFileURL } from 'node:url';
 /** Kits are the packages named app-<name>-kit. */
 export const isKit = (name) => /^app-[a-z0-9-]+-kit$/.test(name);
 
-const STANDARD = /^git\+https:\/\/github\.com\/([^/]+\/[^/#]+?)(?:\.git)?#([0-9a-f]{40})$/;
+const STANDARD = /^git\+https:\/\/github\.com\/([A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9_.][A-Za-z0-9_.-]*?)(?:\.git)?#([0-9a-f]{40})$/;
+/** A release tag: v1.2.3, with an optional -beta.1 style suffix. Nothing else reaches git. */
+export const isTag = (tag) => typeof tag === 'string' && /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/.test(tag);
 const CODELOAD = /^https:\/\/codeload\.github\.com\/([^/]+\/[^/]+)\/tar\.gz\/([0-9a-f]{7,40})$/;
 
 /** The GitHub repo ("owner/name") and commit a kit is pinned to, or null when it is not the standard pin. */
@@ -39,8 +41,9 @@ export const commitOfTag = (lsRemote) => {
   return (lines.find(([, ref]) => ref.endsWith('^{}')) ?? lines[0])[0];
 };
 
+// Only a checked repo and tag reach git, after "--", so nothing read from package.json can become a git option.
 const lsRemote = (repo, tag) =>
-  execFileSync('git', ['ls-remote', '--tags', `https://github.com/${repo}.git`, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { encoding: 'utf8' });
+  execFileSync('git', ['ls-remote', '--tags', '--', `https://github.com/${repo}.git`, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { encoding: 'utf8' });
 
 /** Every problem with the kit pins of one package.json, plus a line for each kit that is fine. `readTags` is git ls-remote (replaced in tests). */
 export const checkKits = (pkg, readTags = lsRemote) => {
@@ -65,6 +68,10 @@ export const checkKits = (pkg, readTags = lsRemote) => {
     const tag = kitVersions[name];
     if (!tag) {
       problems.push(`${name}: no entry in "kitVersions". Add the tag this commit belongs to.`);
+      continue;
+    }
+    if (!isTag(tag)) {
+      problems.push(`${name}: "${tag}" in "kitVersions" is not a release tag such as v1.2.0.`);
       continue;
     }
     let out = '';
