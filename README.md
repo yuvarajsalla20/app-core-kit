@@ -2,7 +2,7 @@
 
 The non-functional basics every React Native and Expo app needs (iOS, Android and web): an error boundary, a global error handler, privacy-safe crash reporting with Sentry, timeouts and retries, and friendly error text. No native dependencies of its own and nothing specific to any one app.
 
-**Current version: 1.7.0** (tag `v1.7.0`)
+**Current version: 1.8.0** (tag `v1.8.0`)
 
 Part of the shared kits:
 **app-core-kit** ·
@@ -20,14 +20,14 @@ The other kits use it for `reportError`, so install it in every app.
 ```jsonc
 // package.json
 "dependencies": {
-  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.7.0>"
+  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.8.0>"
 },
 "kitVersions": {
-  "app-core-kit": "v1.7.0"
+  "app-core-kit": "v1.8.0"
 }
 ```
 
-Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.7.0`.
+Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.8.0`.
 
 **Peer dependencies:** `react` ≥ 18, `react-native` ≥ 0.74, and optionally `@sentry/react-native` ≥ 8 (only for crash reports; it loads only when a DSN is set).
 
@@ -38,6 +38,7 @@ Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Fi
 | `app-core-kit` | Everything below that runs in the app |
 | `app-core-kit/expo` | `withMonitoring(config)` for `app.config.js` (plain Node) |
 | `app-core-kit/metro` | `monitoringMetroConfig(__dirname)` for `metro.config.js` (plain Node) |
+| `app-kit-pins` (command) | The kit pin check, below |
 | `app-core-kit/package.json` | The kit's `version`, for an About > Kits list |
 
 ## Quick start
@@ -87,6 +88,18 @@ try {
 ```
 
 For readable crash stacks, set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` as EAS environment variables, and `EXPO_PUBLIC_SENTRY_DSN` for the app. With none set, the build is unchanged; with only some set, a warning names the missing ones.
+
+## Kit pin check
+
+One check for every app, so the apps never keep their own copies. Every kit (a package named `app-<name>-kit`) must use the standard pin, the full commit SHA of a release tag, and `kitVersions` must name that tag:
+
+```jsonc
+"scripts": { "check:kits": "app-kit-pins" },
+"dependencies": { "app-settings-kit": "git+https://github.com/yuvarajsalla20/app-settings-kit.git#<full SHA of v8.0.0>" },
+"kitVersions": { "app-settings-kit": "v8.0.0" }
+```
+
+Run `npm run check:kits` after `npm ci` (locally and in CI). It fails, and says the fix, when a tag is missing, a pin points at another commit, a kit has no `kitVersions` entry, or a kit uses another pin format (a codeload tarball, a short SHA, a branch or an npm range). `npm install` may write `git+ssh://` into package-lock.json; change those back to `git+https://` so CI and EAS can install without SSH keys.
 
 ## Readable crash stacks: metro.config.js
 
