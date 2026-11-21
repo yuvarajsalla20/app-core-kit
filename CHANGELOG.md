@@ -2,6 +2,12 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.8.0
+
+Nothing breaks. The kit pin check moves into the kit, so every app runs the same one: set `"check:kits": "app-kit-pins"` and delete the app's own `scripts/checkKitTags.mjs`. Run it after `npm ci`.
+
+There is now one pin format for every kit: `git+https://github.com/<owner>/<kit>.git#<full SHA>`. The check fails on codeload tarballs, short SHAs, branches and npm ranges, and prints the standard pin to use. It also checks kits that are not in package.json's `kitVersions` yet, and every `app-*-kit`, not only the GitHub-pinned ones.
+
 ## 1.7.0
 
 Nothing breaks. The built-in crash screen can now offer a way out: pass `onSignOut` to `ErrorBoundary` and it shows a "Log Out" button (the same words as the other kits) under "Try Again". Once sign-out finishes, the content is tried again, now signed out; if sign-out fails, the screen stays and the failure is reported. Both apps can now drop their own CrashScreen copies and the `fallback` prop (see below). The built-in words are now in Title Case: "Something Went Wrong", "Try Again", and the new `strings.signOut` ("Log Out").

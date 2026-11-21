@@ -1,13 +1,17 @@
 {
   "name": "app-core-kit",
-  "version": "1.7.0",
-  "description": "Reusable non-functional basics for React Native / Expo apps: error boundary, global error handler, crash-report hook, timeouts and retries, friendly error text.",
+  "version": "1.8.0",
+  "description": "Reusable non-functional basics for React Native / Expo apps: error boundary, global error handler, crash-report hook, timeouts and retries, friendly error text, and the one kit pin check for every app.",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "bin": {
+    "app-kit-pins": "checkKitPins.mjs"
+  },
   "files": [
     "src",
     "expo.js",
-    "metro.js"
+    "metro.js",
+    "checkKitPins.mjs"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -34,7 +38,8 @@
     ".": "./src/index.ts",
     "./expo": "./expo.js",
     "./metro": "./metro.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./pin-check": "./checkKitPins.mjs"
   },
   "peerDependenciesMeta": {
     "@sentry/react-native": {
