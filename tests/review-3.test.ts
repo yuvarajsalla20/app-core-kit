@@ -1,5 +1,7 @@
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-native', () => ({ Pressable: 'Pressable', StyleSheet: { create: <T,>(x: T) => x }, Text: 'Text', View: 'View' }));
@@ -107,22 +109,27 @@ describe('ErrorBoundary reset keys and words', () => {
   });
   it('shows the app\'s own words, and the plain defaults otherwise', () => {
     const text = (b: InstanceType<typeof ErrorBoundary>) => JSON.stringify(b.render());
-    expect(text(make())).toContain('Something went wrong');
-    expect(text(make())).toContain('Try again');
+    expect(text(make())).toContain('Something Went Wrong');
+    expect(text(make())).toContain('Try Again');
     const custom = text(make({ strings: { title: 'Oups', retry: 'Réessayer', message: () => 'Un problème.' } }));
     expect(custom).toContain('Oups');
     expect(custom).toContain('Réessayer');
     expect(custom).toContain('Un problème.');
-    expect(custom).not.toContain('Try again');
+    expect(custom).not.toContain('Try Again');
   });
 });
 
 describe('withMonitoring (expo.js)', () => {
-  const load = (env: Record<string, string | undefined>) => {
+  const load = (env: Record<string, string | undefined>, projectRoot?: string) => {
     for (const k of ['SENTRY_AUTH_TOKEN', 'SENTRY_ORG', 'SENTRY_PROJECT']) vi.stubEnv(k, env[k] ?? '');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { withMonitoring } = createRequire(import.meta.url)('../expo.js') as { withMonitoring: (c: object) => { plugins?: unknown[] } };
-    return { out: withMonitoring({ name: 'x' }), warn };
+    const { withMonitoring } = createRequire(import.meta.url)('../expo.js') as { withMonitoring: (c: object, root?: string) => { plugins?: unknown[] } };
+    return { out: withMonitoring({ name: 'x' }, projectRoot), warn };
+  };
+  const appWithMetro = (contents: string) => {
+    const root = mkdtempSync(join(tmpdir(), 'core-kit-app-'));
+    writeFileSync(join(root, 'metro.config.js'), contents);
+    return root;
   };
   afterEach(() => vi.unstubAllEnvs());
   it('does nothing and says nothing when none of the three are set', () => {
@@ -135,10 +142,19 @@ describe('withMonitoring (expo.js)', () => {
     expect(out).toEqual({ name: 'x' });
     expect(String(warn.mock.calls[0]?.[0])).toContain('SENTRY_AUTH_TOKEN, SENTRY_PROJECT');
   });
-  it('adds the plugin, without a warning, when all three are set', () => {
-    const { out, warn } = load({ SENTRY_AUTH_TOKEN: 't', SENTRY_ORG: 'o', SENTRY_PROJECT: 'p' });
+  const ALL = { SENTRY_AUTH_TOKEN: 't', SENTRY_ORG: 'o', SENTRY_PROJECT: 'p' };
+  it('adds the plugin, without a warning, when all three are set and metro.config.js uses the kit', () => {
+    const { out, warn } = load(ALL, appWithMetro("module.exports = require('app-core-kit/metro').monitoringMetroConfig(__dirname);"));
     expect(out.plugins).toHaveLength(1);
     expect(warn).not.toHaveBeenCalled();
+  });
+  it('still adds the plugin, but warns, when the app has no metro.config.js using the kit', () => {
+    for (const root of [mkdtempSync(join(tmpdir(), 'core-kit-app-')), appWithMetro("module.exports = require('expo/metro-config').getDefaultConfig(__dirname);")]) {
+      const { out, warn } = load(ALL, root);
+      expect(out.plugins).toHaveLength(1);
+      expect(String(warn.mock.calls[0]?.[0])).toContain('metro.config.js');
+      warn.mockRestore();
+    }
   });
 });
 
