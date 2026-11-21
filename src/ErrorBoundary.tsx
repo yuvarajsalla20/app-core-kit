@@ -16,11 +16,13 @@ const DEFAULT_COLORS: ErrorBoundaryColors = { bg: '#0B0B0C', text: '#F5F5F7', mu
 export interface ErrorBoundaryStrings {
   title: string;
   retry: string;
+  /** The quieter button under "Try Again", shown only when `onSignOut` is given. Default "Log Out", as in the other kits. */
+  signOut: string;
   /** The line under the title. Default: the plain-language text for the error. */
   message: (error: unknown) => string;
 }
 
-const DEFAULT_STRINGS: ErrorBoundaryStrings = { title: 'Something went wrong', retry: 'Try again', message: friendlyMessage };
+const DEFAULT_STRINGS: ErrorBoundaryStrings = { title: 'Something Went Wrong', retry: 'Try Again', signOut: 'Log Out', message: friendlyMessage };
 
 interface Props {
   /** Names the screen in crash reports, like "home". */
@@ -33,15 +35,21 @@ interface Props {
   strings?: Partial<ErrorBoundaryStrings>;
   /** When any of these change (the current route, for example) a shown error screen clears itself and the content is tried again. */
   resetKeys?: readonly unknown[];
-  /** Runs when the person taps "Try again", before the content is shown again (for example, to clear cached state). */
+  /** Runs when the person taps "Try Again", before the content is shown again (for example, to clear cached state). */
   onReset?: () => void;
+  /**
+   * Leaves the account, so a screen that keeps crashing cannot trap anyone. When given, the built-in screen shows a
+   * "Log Out" button; once this finishes (it may return a Promise), the content is tried again, now signed out.
+   * Leave it out when no one is signed in.
+   */
+  onSignOut?: () => void | Promise<void>;
 }
 
 interface State {
   error: unknown;
 }
 
-/** Catches a crash while drawing its children, reports it, and shows a calm "Try again" screen instead of a dead app. */
+/** Catches a crash while drawing its children, reports it, and shows a calm "Try Again" screen (with "Log Out" when `onSignOut` is given) instead of a dead app. */
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
@@ -68,6 +76,28 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ error: null });
   };
 
+  private mounted = false;
+
+  componentDidMount() {
+    this.mounted = true;
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
+  signOut = async () => {
+    const { onSignOut, where } = this.props;
+    if (!onSignOut) return;
+    try {
+      await onSignOut();
+    } catch (e) {
+      reportError(where, e); // sign-out failed: stay on this screen, where both buttons still work
+      return;
+    }
+    if (this.mounted) this.setState({ error: null });
+  };
+
   render() {
     const { error } = this.state;
     if (error === null) return this.props.children;
@@ -81,6 +111,11 @@ export class ErrorBoundary extends Component<Props, State> {
         <Pressable onPress={this.reset} accessibilityRole="button" style={[styles.button, { borderColor: c.accent }]}>
           <Text style={[styles.buttonText, { color: c.accent }]}>{t.retry}</Text>
         </Pressable>
+        {this.props.onSignOut ? (
+          <Pressable onPress={this.signOut} accessibilityRole="button" hitSlop={8}>
+            <Text style={[styles.link, { color: c.muted }]}>{t.signOut}</Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -92,4 +127,5 @@ const styles = StyleSheet.create({
   detail: { fontSize: 15, textAlign: 'center', lineHeight: 21 },
   button: { marginTop: 12, borderWidth: 1, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 28 },
   buttonText: { fontSize: 16, fontWeight: '600' },
+  link: { fontSize: 14 },
 });

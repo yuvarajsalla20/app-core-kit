@@ -41,6 +41,8 @@ export const capturesGlobalErrors = (): boolean => reporterCapturesGlobal;
 
 // Order matters: tokens and addresses are matched before the looser number patterns can break them apart.
 const PATTERNS: [RegExp, string][] = [
+  // A PEM private key, the whole block (or to the end, if the text was cut short), before its letters can be broken apart.
+  [/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z0-9 ]*PRIVATE KEY-----|$)/g, '[secret]'],
   [/eyJ[\w-]+\.[\w-]+\.[\w-]*/g, '[token]'],
   [/eyJ[\w-]{6,}\.[\w-]{6,}/g, '[token]'], // a JWT cut short
   [/ExponentPushToken\[[^\]]*\]/g, '[token]'],
@@ -49,6 +51,8 @@ const PATTERNS: [RegExp, string][] = [
   [/\b(proxy-authorization|authorization|set-cookie|cookie|x-api-key|x-auth-token)\s*:[^\r\n]+/gi, '$1: [secret]'],
   // JSON: "password":"x", also with escaped quotes inside a JSON string and single quotes. The whole quoted value goes, spaces included.
   [/(\\?["'])([\w-]*(?:token|secret|password|passwd|pwd|passcode|api[_-]?key|session[_-]?id|sessionid|cookie|otp|signature)|key|auth|authorization|sig|sid)\1(\s*:\s*)(?:\\"(?:[^"\\]|\\(?!"))*\\"|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s,}\]"'\\]+)/gi, '$1$2$1$3"[secret]"'],
+  // Plain "password: hunter2", "token: abc", "private_key: …": the value after the colon (a quoted value whole).
+  [/\b([\w-]*(?:token|secret|password|passwd|pwd|passcode|api[_-]?key|private[_-]?key|session[_-]?id|sessionid|otp|signature)|authorization)(\s*:\s*)(?:\[[a-z ]+\]|"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;}\]]+)/gi, '$1$2[secret]'],
   // key=value, including client_secret=, session_id=, id_token= and similar.
   [/\b([\w-]*(?:token|secret|password|passwd|pwd|passcode|api[_-]?key|session[_-]?id|sessionid|cookie|otp|signature)|key|auth|sig|sid)=[^\s&"']+/gi, '$1=[secret]'],
   [/\?[^\s"'#]+/g, '?[query]'], // everything after a ? in a link can carry a secret
