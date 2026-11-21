@@ -11,7 +11,13 @@ Part of the shared kits:
 [app-settings-kit](https://github.com/yuvarajsalla20/app-settings-kit) ·
 [app-subscriptions-kit](https://github.com/yuvarajsalla20/app-subscriptions-kit) ·
 [app-payments-kit](https://github.com/yuvarajsalla20/app-payments-kit) ·
-[app-export-kit](https://github.com/yuvarajsalla20/app-export-kit)
+[app-export-kit](https://github.com/yuvarajsalla20/app-export-kit) ·
+[app-guard-kit](https://github.com/yuvarajsalla20/app-guard-kit) ·
+[app-theme-kit](https://github.com/yuvarajsalla20/app-theme-kit) ·
+[app-invite-kit](https://github.com/yuvarajsalla20/app-invite-kit) ·
+[app-goldrates-api-kit](https://github.com/yuvarajsalla20/app-goldrates-api-kit)
+
+Tools that work alongside them: [code-review-kit](https://github.com/yuvarajsalla20/code-review-kit) (reviews) and app-insights-kit (store numbers, private).
 
 The other kits use it for `reportError`, so install it in every app.
 
@@ -165,6 +171,10 @@ To release: bump `version` in `package.json` and `KIT_VERSION` in `src/kit.ts`, 
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md).
+
+## Writing rule
+
+Every word this kit shows, and every line of its documentation, follows the shared [Writing rule](https://github.com/yuvarajsalla20/app-settings-kit#writing-rule-every-word-is-professional): Title Case for titles, rows and buttons; calm, complete sentences for captions and messages; "e.g.," for examples; no chatty fragments, slang or exclamation marks. Apps do not override these words; a change is made in the kit so that every app receives it.
 
 ## License
 
