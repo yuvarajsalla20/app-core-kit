@@ -2,6 +2,10 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.9.0
+
+Nothing breaks. A second check for every app, `app-sheet-check`, keeps each app's `APP.md` (the App Sheet) true to the code: the app version from `app.json`, every kit and version from `kitVersions`, and every key name in `.env.example`. Add `"check:app": "app-sheet-check"` and run it in CI after `check:kits`. See "App Sheet check" in the README.
+
 ## 1.8.0
 
 Nothing breaks. The kit pin check moves into the kit, so every app runs the same one: set `"check:kits": "app-kit-pins"` and delete the app's own `scripts/checkKitTags.mjs`. Run it after `npm ci`.

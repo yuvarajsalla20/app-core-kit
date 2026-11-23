@@ -2,7 +2,7 @@
 
 The non-functional basics every React Native and Expo app needs (iOS, Android and web): an error boundary, a global error handler, privacy-safe crash reporting with Sentry, timeouts and retries, and friendly error text. No native dependencies of its own and nothing specific to any one app.
 
-**Current version: 1.8.0** (tag `v1.8.0`)
+**Current version: 1.9.0** (tag `v1.9.0`)
 
 Part of the shared kits:
 **app-core-kit** ·
@@ -26,14 +26,14 @@ The other kits use it for `reportError`, so install it in every app.
 ```jsonc
 // package.json
 "dependencies": {
-  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.8.0>"
+  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.9.0>"
 },
 "kitVersions": {
-  "app-core-kit": "v1.8.0"
+  "app-core-kit": "v1.9.0"
 }
 ```
 
-Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.8.0`.
+Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.9.0`.
 
 **Peer dependencies:** `react` ≥ 18, `react-native` ≥ 0.74, and optionally `@sentry/react-native` ≥ 8 (only for crash reports; it loads only when a DSN is set).
 
@@ -45,6 +45,7 @@ Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Fi
 | `app-core-kit/expo` | `withMonitoring(config)` for `app.config.js` (plain Node) |
 | `app-core-kit/metro` | `monitoringMetroConfig(__dirname)` for `metro.config.js` (plain Node) |
 | `app-kit-pins` (command) | The kit pin check, below |
+| `app-sheet-check` (command) | 1.9.0: the App Sheet check, below |
 | `app-core-kit/package.json` | The kit's `version`, for an About > Kits list |
 
 ## Quick start
@@ -106,6 +107,16 @@ One check for every app, so the apps never keep their own copies. Every kit (a p
 ```
 
 Run `npm run check:kits` after `npm ci` (locally and in CI). It fails, and says the fix, when a tag is missing, a pin points at another commit, a kit has no `kitVersions` entry, or a kit uses another pin format (a codeload tarball, a short SHA, a branch or an npm range). `npm install` may write `git+ssh://` into package-lock.json; change those back to `git+https://` so CI and EAS can install without SSH keys.
+
+## App Sheet check (1.9.0)
+
+Every app keeps one `APP.md`, the App Sheet: what the app runs on (each service, its plan and the account that pays), the kits, the owner switches in Firestore `config/app`, the names of its keys and secrets, and the one-time setup steps. The template is in app-starter-template. This check keeps the sheet true to the code, so a version change can never leave it behind:
+
+```jsonc
+"scripts": { "check:app": "app-sheet-check" }
+```
+
+Run `npm run check:app` locally and in CI. It fails, and says the fix, when `APP.md` is missing or has no `**Last reviewed:** YYYY-MM-DD` line, when its Version row is not the version in `app.json`, when its Kits table does not list exactly the kits and versions in `kitVersions`, or when a key in `.env.example` is not named in it (a written prefix such as `EXPO_PUBLIC_FIREBASE_*` covers its keys). Services, plans and owner switches cannot be read from the code, so each app's `CLAUDE.md` asks for those to be updated in the same pull request.
 
 ## Readable crash stacks: metro.config.js
 
