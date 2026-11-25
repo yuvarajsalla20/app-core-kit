@@ -232,9 +232,10 @@ describe('ErrorBoundary', () => {
 describe('the exports every app imports', () => {
   it('keeps every name', () => {
     expect(Object.keys(kit).sort()).toEqual([
-      'ErrorBoundary', 'FALLBACK_MESSAGE', 'KIT_NAME', 'KIT_VERSION', 'NO_CONNECTION_MESSAGE', 'TIMEOUT_MESSAGE', 'TimeoutError',
-      'friendlyMessage', 'installGlobalHandler', 'isNetworkError', 'isPermissionError', 'isTimeoutError', 'reportError', 'retry',
-      'scrub', 'scrubEvent', 'setReporter', 'sleep', 'startMonitoring', 'withTimeout',
+      'CSV_BOM', 'ErrorBoundary', 'FALLBACK_MESSAGE', 'KIT_NAME', 'KIT_VERSION', 'NO_CONNECTION_MESSAGE', 'TIMEOUT_MESSAGE', 'TimeoutError',
+      'createRemoteConfig', 'escapeHtml', 'friendlyMessage', 'installGlobalHandler', 'isNetworkError', 'isPermissionError', 'isTimeoutError',
+      'newInstallationId', 'reportError', 'retry', 'scrub', 'scrubEvent', 'setReporter', 'sleep', 'startMonitoring', 'toCsv',
+      'useShallowStable', 'withAlpha', 'withTimeout',
     ]);
   });
 });

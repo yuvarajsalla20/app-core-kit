@@ -2,6 +2,13 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.10.0
+
+Nothing breaks. Two additions:
+
+- `createRemoteConfig` brings Firebase Remote Config to React Native apps without a native module, through Firebase's REST endpoints. Values are kept on the phone, read at once and offline, and fetched at most hourly. It includes the `useFlag` and `useLimit` hooks for owner switches and limits. PAL's own client moves here.
+- `toCsv`, `CSV_BOM`, `escapeHtml`, `withAlpha` and `useShallowStable`: the helpers that several kits had copied, kept here once. The kits switch to these in their next versions and delete their copies.
+
 ## 1.9.0
 
 Nothing breaks. A second check for every app, `app-sheet-check`, keeps each app's `APP.md` (the App Sheet) true to the code: the app version from `app.json`, every kit and version from `kitVersions`, and every key name in `.env.example`. Add `"check:app": "app-sheet-check"` and run it in CI after `check:kits`. See "App Sheet check" in the README.
