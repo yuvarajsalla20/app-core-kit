@@ -89,3 +89,16 @@ describe('newInstallationId', () => {
     expect(id[0]).toBe('f');
   });
 });
+
+describe('newInstallationId without crypto (1.10.1)', () => {
+  it('falls back to Math.random when the platform has no crypto global', () => {
+    const saved = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true });
+    try {
+      const id = newInstallationId();
+      expect(id).toMatch(/^[A-Za-z0-9_-]{22}$/);
+    } finally {
+      if (saved) Object.defineProperty(globalThis, 'crypto', saved);
+    }
+  });
+});

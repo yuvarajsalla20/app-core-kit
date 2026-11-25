@@ -2,6 +2,10 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.10.1
+
+Nothing breaks. `createRemoteConfig` now works on React Native without a `crypto` polyfill: the installation id uses the platform's secure random source where there is one, and `Math.random` otherwise (Hermes has no `crypto` global). Before this, the first fetch failed on such a phone.
+
 ## 1.10.0
 
 Nothing breaks. Two additions:
