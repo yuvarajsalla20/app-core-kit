@@ -2,6 +2,10 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.11.0
+
+Nothing breaks. A new entry point, `app-core-kit/shared`, holds only the shared helpers (`toCsv`, `CSV_BOM`, `escapeHtml`, `withAlpha`, `useShallowStable`, `isPermissionError` and `isNetworkError`). Other kits import them from there and delete their own copies, so each helper exists once and the copies can no longer drift apart.
+
 ## 1.10.1
 
 Nothing breaks. `createRemoteConfig` now works on React Native without a `crypto` polyfill: the installation id uses the platform's secure random source where there is one, and `Math.random` otherwise (Hermes has no `crypto` global). Before this, the first fetch failed on such a phone.
