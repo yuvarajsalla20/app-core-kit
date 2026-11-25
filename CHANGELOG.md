@@ -2,6 +2,10 @@
 
 Upgrade notes for app-core-kit, newest first. Each version is tagged in git (`v1.6.1`).
 
+## 1.12.0
+
+Nothing breaks. The plan mode (`PlanMode`, `usePlanMode`, `getPlanMode`, `setPlanMode`, `planModeFrom`, `usePremiumOffered`, `offeredOptions`) moves here, in both entry points. app-account-kit and app-subscriptions-kit each kept an identical copy; they now re-export this one. The store keeps the same global key, so every kit still reads one value.
+
 ## 1.11.0
 
 Nothing breaks. A new entry point, `app-core-kit/shared`, holds only the shared helpers (`toCsv`, `CSV_BOM`, `escapeHtml`, `withAlpha`, `useShallowStable`, `isPermissionError` and `isNetworkError`). Other kits import them from there and delete their own copies, so each helper exists once and the copies can no longer drift apart.

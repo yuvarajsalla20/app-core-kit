@@ -4,3 +4,5 @@
  */
 export { CSV_BOM, escapeHtml, toCsv, useShallowStable, withAlpha } from './shared';
 export { isNetworkError, isPermissionError } from './messages';
+export { DEFAULT_PLAN_MODE, getPlanMode, offeredOptions, planModeFrom, setPlanMode, usePlanMode, usePremiumOffered } from './planMode';
+export type { PlanMode, PlanModeSource } from './planMode';

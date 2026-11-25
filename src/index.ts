@@ -12,3 +12,5 @@ export type { MonitoringOptions } from './monitoring';
 export { createRemoteConfig, newInstallationId } from './remoteConfig';
 export type { RemoteConfig, RemoteConfigOptions, RemoteConfigStorage, RemoteValues } from './remoteConfig';
 export { CSV_BOM, escapeHtml, toCsv, useShallowStable, withAlpha } from './shared';
+export { DEFAULT_PLAN_MODE, getPlanMode, offeredOptions, planModeFrom, setPlanMode, usePlanMode, usePremiumOffered } from './planMode';
+export type { PlanMode, PlanModeSource } from './planMode';
