@@ -9,3 +9,6 @@ export { reportError, scrub, setReporter } from './report';
 export type { Reporter, ReporterOptions } from './report';
 export { scrubEvent, startMonitoring } from './monitoring';
 export type { MonitoringOptions } from './monitoring';
+export { createRemoteConfig, newInstallationId } from './remoteConfig';
+export type { RemoteConfig, RemoteConfigOptions, RemoteConfigStorage, RemoteValues } from './remoteConfig';
+export { CSV_BOM, escapeHtml, toCsv, useShallowStable, withAlpha } from './shared';
