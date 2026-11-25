@@ -2,7 +2,7 @@
 
 The non-functional basics every React Native and Expo app needs (iOS, Android and web): an error boundary, a global error handler, privacy-safe crash reporting with Sentry, timeouts and retries, and friendly error text. No native dependencies of its own and nothing specific to any one app.
 
-**Current version: 1.10.0** (tag `v1.10.0`)
+**Current version: 1.10.1** (tag `v1.10.1`)
 
 Part of the shared kits:
 **app-core-kit** ·
@@ -26,14 +26,14 @@ The other kits use it for `reportError`, so install it in every app.
 ```jsonc
 // package.json
 "dependencies": {
-  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.10.0>"
+  "app-core-kit": "git+https://github.com/yuvarajsalla20/app-core-kit.git#<full SHA of v1.10.1>"
 },
 "kitVersions": {
-  "app-core-kit": "v1.10.0"
+  "app-core-kit": "v1.10.1"
 }
 ```
 
-Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.10.0`.
+Pin the full commit SHA of a release tag, and write the tag in `kitVersions`. Find a SHA with `git ls-remote https://github.com/yuvarajsalla20/app-core-kit refs/tags/v1.10.1`.
 
 **Peer dependencies:** `react` ≥ 18, `react-native` ≥ 0.74, and optionally `@sentry/react-native` ≥ 8 (only for crash reports; it loads only when a DSN is set).
 

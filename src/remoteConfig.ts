@@ -59,8 +59,18 @@ interface Installation {
   expiresAt: number;
 }
 
+/**
+ * Random bytes: the platform's secure source where there is one, else Math.random (React Native's Hermes engine has no
+ * `crypto` global). An installation id is not a secret, so either is fine here.
+ */
+const randomBytes = (n: number): Uint8Array => {
+  const c = (globalThis as { crypto?: { getRandomValues?: (a: Uint8Array) => Uint8Array } }).crypto;
+  if (c?.getRandomValues) return c.getRandomValues(new Uint8Array(n));
+  return Uint8Array.from({ length: n }, () => Math.floor(Math.random() * 256));
+};
+
 /** A Firebase installation id: 22 characters of URL-safe base64 whose first 4 bits are 0111 (Firebase's own rule). */
-export function newInstallationId(random: (n: number) => Uint8Array = (n) => crypto.getRandomValues(new Uint8Array(n))): string {
+export function newInstallationId(random: (n: number) => Uint8Array = randomBytes): string {
   const bytes = random(17);
   bytes[0] = 0b01110000 + (bytes[0]! % 0b10000);
   const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_');
